@@ -4,79 +4,62 @@ var page = webPage.create();
 const email = 'ntczyldfgikb@dropmail.me';
 const pass = 'WooThooW3kei';
 
-var interval = 0;
-
 page.viewportSize = {
   width: 1920,
   height: 1080
 };
 
-
 page.open('https://makler.md/ru', function(status) {
+  var interval = 0;
+  var flowObj = {};
   if (status === 'success') {
-    // LOGIN: click on the link --> display form --> add values (email, pass) --> click on the submit button
 
-    // CLICK ON THE LINK
-    // find coordinats for the login elem
-    const logInElemCoordinats = page.evaluate(function() {
-      return document.getElementById('logInDiv').getBoundingClientRect();
-    });
+    // LOGIN: click on the link for displaing form --> add values (email, pass) --> click on the submit button
+    findCoordinatsForElem(flowObj, 'link', '#logInDiv');
+    page.sendEvent('click', flowObj.linkCenterX, flowObj.linkCenterY, 'left');
 
-    // calculate the center of the login element and clik on it
-    const loginElemCenter = {
-      x: logInElemCoordinats.right - (logInElemCoordinats.width / 2),
-      y: logInElemCoordinats.bottom - (logInElemCoordinats.height / 2)
-    };
-    // click on the link for showing the login form
-    page.sendEvent('click', loginElemCenter.x, loginElemCenter.y, 'left');
+    setTimeout(function() { // set timeout n second for allow to render the elem
+      addValueIntoForm(email, pass);
+      findCoordinatsForElem(flowObj, 'btn', 'a[data-action="login"]');
+      page.sendEvent('click', flowObj.btnCenterX, flowObj.btnCenterY, 'left'); // click on the submit button
+    }, interval += 5000);
 
-    // ADD VALUES (email, pass) for login form and click on the submit button
-    setTimeout(function() {
-      const logInBtnCoordinats = page.evaluate(function(email, pass) {
-        // add values
-        document.getElementById('logInEmail').value = email;
-        document.getElementById('logInPassword').value = pass;
-
-        // find coordinats for the login submit button
-        return document.querySelector('a[data-action="login"]').getBoundingClientRect();
-      }, email, pass);
-
-      // calculate the center of the login button and clik on it
-      const loginBtnCenter = {
-        x: logInBtnCoordinats.right - (logInBtnCoordinats.width / 2),
-        y: logInBtnCoordinats.bottom - (logInBtnCoordinats.height / 2)
-      };
-      // click on the submit button
-      page.sendEvent('click', loginBtnCenter.x, loginBtnCenter.y, 'left');
-    }, interval += 1000);
-
-    // GO TO MY GOODS and push up last item
+    // GO TO MY GOODS and push up last itemk
     setTimeout(function() {
       page.open('https://makler.md/ru/an/my', function() {
-        // find coordinats for the push-up button
-        const pushUpBtnCoordinats = page.evaluate(function() {
-          var elemColl = document.querySelectorAll('a.push-up'); // finf all btns
-
-          return elemColl[elemColl.length-1].getBoundingClientRect(); // return last push-up btn
-        });
-
-        const pushUpBtnCenter = {
-          x: pushUpBtnCoordinats.right - (pushUpBtnCoordinats.width / 2),
-          y: pushUpBtnCoordinats.bottom - (pushUpBtnCoordinats.height / 2)
-        };
-
-        console.log(pushUpBtnCenter);
-        page.sendEvent('click', pushUpBtnCenter.x, pushUpBtnCenter.y, 'left');
+        findCoordinatsForElem(flowObj, 'pushup', 'a.push-up');
+        page.sendEvent('click', flowObj.pushupCenterX, flowObj.pushupCenterY, 'left');
       });
-    }, interval += 1000);
+    }, interval += 5000);
 
-    setTimeout(function() { // we need the setTimeot function for allowing the phantomJS to render the login elemen
-      console.log(page.url);
+    // check if all is ok
+    setTimeout(function() {
       page.render('makler.jpeg', {format: 'jpeg', quality: '100'});
       phantom.exit();
-    }, interval += 1000);
+    }, interval += 5000);
   }
   // else {
   //  log into file
   // }
 });
+
+//  functions
+function findCoordinatsForElem(flowObj, elemName, querySelector) {
+  flowObj[elemName] = page.evaluate(function(querySelector) {
+    var elemColl = document.querySelectorAll(querySelector); // finf all elem
+    return elemColl[elemColl.length-1].getBoundingClientRect(); // return last push-up btn
+  }, querySelector);
+
+  // calculate the center of the login element and clik on it
+  flowObj[elemName + 'CenterX'] = flowObj[elemName].right - (flowObj[elemName].width / 2);
+  flowObj[elemName + 'CenterY'] = flowObj[elemName].bottom - (flowObj[elemName].height / 2);
+}
+
+function addValueIntoForm(email, pass) {
+  // the email, pass vars were declarate globaly
+  page.evaluate(function(email, pass) {
+    // add values
+    document.getElementById('logInEmail').value = email;
+    document.getElementById('logInPassword').value = pass;
+  }, email, pass);
+}
