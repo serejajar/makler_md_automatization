@@ -34,13 +34,14 @@ page.open('https://makler.md/ru', function(status) {
 
     // check if all is ok
     setTimeout(function() {
-      page.render('makler.jpeg', {format: 'jpeg', quality: '100'});
+      findStatusText(flowObj, '#push-up');
+      console.log(flowObj.statusText);
       phantom.exit();
     }, interval += 5000);
   }
-  // else {
-  //  log into file
-  // }
+  else {
+    console.log('ERROR with loading page: ' + status);
+  }
 });
 
 //  functions
@@ -62,4 +63,13 @@ function addValueIntoForm(email, pass) {
     document.getElementById('logInEmail').value = email;
     document.getElementById('logInPassword').value = pass;
   }, email, pass);
+}
+
+function findStatusText(flowObj, querySelector) {
+  flowObj.statusText = page.evaluate(function(querySelector) {
+    var elem1 = document.querySelector(querySelector + ' p');
+    var elem2 = document.querySelector(querySelector + ' div.message');
+
+    return elem1 ? elem1.innerHTML : elem2.innerHTML; // return status text
+  }, querySelector);
 }
