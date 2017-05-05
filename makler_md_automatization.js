@@ -9,33 +9,30 @@ page.viewportSize = {
   height: 1080
 };
 
-page.open('https://makler.md/ru', function(status) {
+page.onConsoleMessage = function(msg) {
+  if (msg.indexOf('phantom_for_makler_md') > - 1) {
+    console.log(msg);
+  }
+};
+
+page.open('https://makler.md/ru/an/my', function(status) {
   var interval = 0;
   var flowObj = {};
+
   if (status === 'success') {
+    // ADD VALUES (email, pass) --> click on the submit button
+    addValueIntoForm(email, pass);
+    clickOnElem(flowObj, 'btn', 'a[data-action="login"]');
 
-    // LOGIN: click on the link for displaing form --> add values (email, pass) --> click on the submit button
-    findCoordinatsForElem(flowObj, 'link', '#logInDiv');
-    page.sendEvent('click', flowObj.linkCenterX, flowObj.linkCenterY, 'left');
-
-    setTimeout(function() { // set timeout n second for allow to render the elem
-      addValueIntoForm(email, pass);
-      findCoordinatsForElem(flowObj, 'btn', 'a[data-action="login"]');
-      page.sendEvent('click', flowObj.btnCenterX, flowObj.btnCenterY, 'left'); // click on the submit button
-    }, interval += 5000);
-
-    // GO TO MY GOODS and push up last itemk
+    // PUSH UP last itemk
     setTimeout(function() {
-      page.open('https://makler.md/ru/an/my', function() {
-        findCoordinatsForElem(flowObj, 'pushup', 'a.push-up');
-        page.sendEvent('click', flowObj.pushupCenterX, flowObj.pushupCenterY, 'left');
-      });
+      clickOnElem(flowObj, 'pushup', 'a.push-up');
     }, interval += 5000);
 
-    // check if all is ok
+    // CHECK if all is ok and EXIT
     setTimeout(function() {
       findStatusText(flowObj, '#push-up');
-      console.log(flowObj.statusText);
+      page.render('makler.jpeg', {format: 'jpeg', quality: '100'});
       phantom.exit();
     }, interval += 5000);
   }
@@ -45,23 +42,24 @@ page.open('https://makler.md/ru', function(status) {
 });
 
 //  functions
-function findCoordinatsForElem(flowObj, elemName, querySelector) {
+function clickOnElem(flowObj, elemName, querySelector) {
   flowObj[elemName] = page.evaluate(function(querySelector) {
-    var elemColl = document.querySelectorAll(querySelector); // finf all elem
-    return elemColl[elemColl.length-1].getBoundingClientRect(); // return last push-up btn
-  }, querySelector);
+    var elemColl = document.querySelectorAll(querySelector); // find all elem
+    var element = elemColl[elemColl.length-1];
 
-  // calculate the center of the login element and clik on it
-  flowObj[elemName + 'CenterX'] = flowObj[elemName].right - (flowObj[elemName].width / 2);
-  flowObj[elemName + 'CenterY'] = flowObj[elemName].bottom - (flowObj[elemName].height / 2);
+    var event = document.createEvent('MouseEvents');
+    event.initMouseEvent('click', true, true, window, 1, 0, 0);
+    // send click to element
+    element.dispatchEvent(event);
+  }, querySelector);
 }
 
 function addValueIntoForm(email, pass) {
   // the email, pass vars were declarate globaly
   page.evaluate(function(email, pass) {
     // add values
-    document.getElementById('logInEmail').value = email;
-    document.getElementById('logInPassword').value = pass;
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
   }, email, pass);
 }
 
@@ -69,7 +67,7 @@ function findStatusText(flowObj, querySelector) {
   flowObj.statusText = page.evaluate(function(querySelector) {
     var elem1 = document.querySelector(querySelector + ' p');
     var elem2 = document.querySelector(querySelector + ' div.message');
-
     return elem1 ? elem1.innerHTML : elem2.innerHTML; // return status text
   }, querySelector);
+  console.log('statusText: ' + flowObj.statusText);
 }
