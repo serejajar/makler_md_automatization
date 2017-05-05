@@ -1,8 +1,8 @@
 var webPage = require('webpage');
 var page = webPage.create();
 
-const email = 'ntczyldfgikb@dropmail.me';
-const pass = 'WooThooW3kei';
+const email = 'YOUR_EMAIL';
+const pass = 'YOUR_PASSWORD';
 
 page.viewportSize = {
   width: 1920,
