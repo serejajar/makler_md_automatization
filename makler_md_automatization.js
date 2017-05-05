@@ -9,12 +9,6 @@ page.viewportSize = {
   height: 1080
 };
 
-page.onConsoleMessage = function(msg) {
-  if (msg.indexOf('phantom_for_makler_md') > - 1) {
-    console.log(msg);
-  }
-};
-
 page.open('https://makler.md/ru/an/my', function(status) {
   var interval = 0;
   var flowObj = {};
