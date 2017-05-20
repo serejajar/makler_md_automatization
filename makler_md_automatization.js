@@ -15,8 +15,7 @@ page.open('https://makler.md/ru/an/my', function(status) {
 
   if (status === 'success') {
     // ADD VALUES (email, pass) --> click on the submit button
-    addValueIntoForm(email, pass);
-    clickOnElem(flowObj, 'btn', 'a[data-action="login"]');
+    logIn(email, pass);
 
     // PUSH UP last itemk
     setTimeout(function() {
@@ -36,7 +35,21 @@ page.open('https://makler.md/ru/an/my', function(status) {
 });
 
 //  functions
+function logIn(email, pass) {
+  log('logIn');
+  // the email, pass vars were declarate globaly
+  page.evaluate(function(email, pass) {
+    // add values
+    document.getElementById('email').value = email;
+    document.getElementById('password').value = pass;
+    // send request for log in
+    $('#userLoginForm').submit();
+  }, email, pass);
+}
+
 function clickOnElem(flowObj, elemName, querySelector) {
+  log('clickOnElem:' + querySelector);
+
   flowObj[elemName] = page.evaluate(function(querySelector) {
     var elemColl = document.querySelectorAll(querySelector); // find all elem
     var element = elemColl[elemColl.length-1];
@@ -48,20 +61,18 @@ function clickOnElem(flowObj, elemName, querySelector) {
   }, querySelector);
 }
 
-function addValueIntoForm(email, pass) {
-  // the email, pass vars were declarate globaly
-  page.evaluate(function(email, pass) {
-    // add values
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pass;
-  }, email, pass);
-}
 
 function findStatusText(flowObj, querySelector) {
+  log('findStatusText');
   flowObj.statusText = page.evaluate(function(querySelector) {
     var elem1 = document.querySelector(querySelector + ' p');
     var elem2 = document.querySelector(querySelector + ' div.message');
     return elem1 ? elem1.innerHTML : elem2.innerHTML; // return status text
   }, querySelector);
   console.log('statusText: ' + flowObj.statusText);
+}
+
+function log(msg) {
+  var date = new Date();
+  console.log(date, msg);
 }
